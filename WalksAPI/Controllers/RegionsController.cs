@@ -6,6 +6,7 @@ using System.Security.Cryptography.Xml;
 using WalksAPI.Data;
 using WalksAPI.Models.Domain;
 using WalksAPI.Models.DTO;
+using WalksAPI.Repositories;
 
 namespace WalksAPI.Controllers
 {
@@ -15,15 +16,18 @@ namespace WalksAPI.Controllers
     public class RegionsController : ControllerBase
     {
         private readonly ApplicationDbContext _dbContext;
-        public RegionsController(ApplicationDbContext dbContext)
+        private readonly IRegionRepository regionRepository;
+
+        public RegionsController(ApplicationDbContext dbContext , IRegionRepository regionRepository)
         {
             _dbContext = dbContext;
+            this.regionRepository = regionRepository;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var regionsDomain  = await _dbContext.Regions.ToListAsync();
+            var regionsDomain  = await regionRepository.GetAllAsync();
 
             var regionsDto = new List<RegionDto>();
 
@@ -44,7 +48,7 @@ namespace WalksAPI.Controllers
         [Route("{id:Guid}")]
         public async Task<IActionResult> GetById([FromRoute] Guid id) {
 
-            var region = await _dbContext.Regions.FirstOrDefaultAsync(u => u.Id == id);
+            var region = await regionRepository.GetByIdAsync(id);
 
             if (region == null)
             {
@@ -73,8 +77,7 @@ namespace WalksAPI.Controllers
                 RegionImageUrl = addRegionRequestDto.RegionImageUrl,
             };
 
-            await _dbContext.Regions.AddAsync(regionDomainModel);
-            _dbContext.SaveChangesAsync();
+            await regionRepository.CreateAsync(regionDomainModel);
 
             var regionDto = new RegionDto
             {
@@ -94,24 +97,29 @@ namespace WalksAPI.Controllers
         [Route("{id:Guid}")]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateRegionRequestDto updateRegionRequestDto)
         {
-            var regionDomain = await _dbContext.Regions.FirstOrDefaultAsync(u => u.Id == id);
+            //map Dto to Domain Model
 
-            if (regionDomain == null) {
+            var redionDomainModel = new Region
+            {
+                Code = updateRegionRequestDto.Code,
+                Name = updateRegionRequestDto.Name,
+                RegionImageUrl = updateRegionRequestDto.RegionImageUrl
+            };
+
+            redionDomainModel = await regionRepository.UpdateAsync(redionDomainModel, id);
+
+            if (redionDomainModel == null) {
                 return NotFound();
             }
 
-            regionDomain.Code = updateRegionRequestDto.Code;
-            regionDomain.Name = updateRegionRequestDto.Name;
-            regionDomain.RegionImageUrl = updateRegionRequestDto.RegionImageUrl;
-
-            _dbContext.SaveChangesAsync();
+          
 
             var regionDto = new Region
             {
-                Id = regionDomain.Id,
-                Name = regionDomain.Name,
-                RegionImageUrl = regionDomain.RegionImageUrl,
-                Code = regionDomain.Code,
+                Id = redionDomainModel.Id,
+                Name = redionDomainModel.Name,
+                RegionImageUrl = redionDomainModel.RegionImageUrl,
+                Code = redionDomainModel.Code,
             };
 
             return Ok(regionDto);
@@ -119,19 +127,12 @@ namespace WalksAPI.Controllers
 
         [HttpDelete]
         [Route("{id:Guid}")]
-        public async Task<IActionResult> Delete([FromRoute] Guid id) { 
-            var regionDomain = await _dbContext.Regions.FirstOrDefaultAsync(u => u.Id == id);
+        public async Task<IActionResult> Delete([FromRoute] Guid id) {
+            var regionDomainModel = await regionRepository.DeleteAsync(id);
 
-            if (regionDomain == null) {
+            if (regionDomainModel == null) {
                 return NotFound();            
             }
-
-            //delete 
-            _dbContext.Regions.Remove(regionDomain);
-            _dbContext.SaveChangesAsync();
-
-            //return deleted region back
-
 
             return Ok();
 

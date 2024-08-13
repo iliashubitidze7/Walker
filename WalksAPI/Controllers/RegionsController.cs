@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using System.Security.Cryptography.Xml;
 using WalksAPI.Data;
@@ -20,9 +21,9 @@ namespace WalksAPI.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
-            var regionsDomain  = _dbContext.Regions.ToList();
+            var regionsDomain  = await _dbContext.Regions.ToListAsync();
 
             var regionsDto = new List<RegionDto>();
 
@@ -41,9 +42,9 @@ namespace WalksAPI.Controllers
 
         [HttpGet]
         [Route("{id:Guid}")]
-        public IActionResult GetById([FromRoute] Guid id) {
+        public async Task<IActionResult> GetById([FromRoute] Guid id) {
 
-            var region = _dbContext.Regions.FirstOrDefault(u => u.Id == id);
+            var region = await _dbContext.Regions.FirstOrDefaultAsync(u => u.Id == id);
 
             if (region == null)
             {
@@ -62,7 +63,7 @@ namespace WalksAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] AddRegionRequestDto addRegionRequestDto)
+        public async Task<IActionResult> Create([FromBody] AddRegionRequestDto addRegionRequestDto)
         {
 
             var regionDomainModel = new Region
@@ -72,8 +73,8 @@ namespace WalksAPI.Controllers
                 RegionImageUrl = addRegionRequestDto.RegionImageUrl,
             };
 
-            _dbContext.Regions.Add(regionDomainModel);
-            _dbContext.SaveChanges();
+            await _dbContext.Regions.AddAsync(regionDomainModel);
+            _dbContext.SaveChangesAsync();
 
             var regionDto = new RegionDto
             {
@@ -91,9 +92,9 @@ namespace WalksAPI.Controllers
 
         [HttpPut]
         [Route("{id:Guid}")]
-        public IActionResult Update([FromRoute] Guid id, [FromBody] UpdateRegionRequestDto updateRegionRequestDto)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateRegionRequestDto updateRegionRequestDto)
         {
-            var regionDomain = _dbContext.Regions.FirstOrDefault(u => u.Id == id);
+            var regionDomain = await _dbContext.Regions.FirstOrDefaultAsync(u => u.Id == id);
 
             if (regionDomain == null) {
                 return NotFound();
@@ -103,7 +104,7 @@ namespace WalksAPI.Controllers
             regionDomain.Name = updateRegionRequestDto.Name;
             regionDomain.RegionImageUrl = updateRegionRequestDto.RegionImageUrl;
 
-            _dbContext.SaveChanges();
+            _dbContext.SaveChangesAsync();
 
             var regionDto = new Region
             {
@@ -118,8 +119,8 @@ namespace WalksAPI.Controllers
 
         [HttpDelete]
         [Route("{id:Guid}")]
-        public IActionResult Delete([FromRoute] Guid id) { 
-            var regionDomain = _dbContext.Regions.FirstOrDefault(u => u.Id == id);
+        public async Task<IActionResult> Delete([FromRoute] Guid id) { 
+            var regionDomain = await _dbContext.Regions.FirstOrDefaultAsync(u => u.Id == id);
 
             if (regionDomain == null) {
                 return NotFound();            
@@ -127,7 +128,7 @@ namespace WalksAPI.Controllers
 
             //delete 
             _dbContext.Regions.Remove(regionDomain);
-            _dbContext.SaveChanges();
+            _dbContext.SaveChangesAsync();
 
             //return deleted region back
 

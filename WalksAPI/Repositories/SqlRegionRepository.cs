@@ -50,7 +50,7 @@ namespace WalksAPI.Repositories
         {
             var existingRegion = await dbcontext.Regions.FirstOrDefaultAsync(u => u.Id == id);
 
-            if (existingRegion != null) {
+            if (existingRegion == null) {
                 return null;
             }
 

@@ -99,16 +99,16 @@ namespace WalksAPI.Controllers
         {
             //map Dto to Domain Model
 
-            var redionDomainModel = new Region
+            var regionDomainModel = new Region
             {
                 Code = updateRegionRequestDto.Code,
                 Name = updateRegionRequestDto.Name,
                 RegionImageUrl = updateRegionRequestDto.RegionImageUrl
             };
 
-            redionDomainModel = await regionRepository.UpdateAsync(redionDomainModel, id);
+            regionDomainModel = await regionRepository.UpdateAsync(regionDomainModel, id);
 
-            if (redionDomainModel == null) {
+            if (regionDomainModel == null) {
                 return NotFound();
             }
 
@@ -116,10 +116,10 @@ namespace WalksAPI.Controllers
 
             var regionDto = new Region
             {
-                Id = redionDomainModel.Id,
-                Name = redionDomainModel.Name,
-                RegionImageUrl = redionDomainModel.RegionImageUrl,
-                Code = redionDomainModel.Code,
+                Id = regionDomainModel.Id,
+                Name = regionDomainModel.Name,
+                RegionImageUrl = regionDomainModel.RegionImageUrl,
+                Code = regionDomainModel.Code,
             };
 
             return Ok(regionDto);
